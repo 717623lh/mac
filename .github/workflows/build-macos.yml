@@ -2,7 +2,7 @@ name: Build macOS App
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:          # 允许在 GitHub 网页上手动触发
 
 jobs:

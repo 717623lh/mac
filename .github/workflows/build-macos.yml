@@ -28,6 +28,7 @@ jobs:
           pyinstaller --windowed \
             --name "AStockScreener" \
             --add-data "data:data" \
+            --collect-all akshare \
             --hidden-import tkinter \
             stock_screener.py
 

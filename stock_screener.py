@@ -5,6 +5,7 @@ import dataclasses
 import datetime as dt
 import queue
 import sqlite3
+import sys
 import threading
 import time
 import traceback
@@ -19,7 +20,29 @@ from tkinter import messagebox, ttk
 APP_NAME = "A股实时均线筛选"
 APP_DIR = Path(__file__).resolve().parent
 DATA_DIR = APP_DIR / "data"
-DB_PATH = DATA_DIR / "stock_history.sqlite3"
+
+
+# 在 PyInstaller 打包后，数据库应存在用户可写目录下
+def _get_db_path() -> Path:
+    if getattr(sys, "frozen", False):
+        if sys.platform == "darwin":
+            base = Path.home() / "Library" / "Application Support" / "AStockScreener"
+        else:
+            base = Path.home() / ".AStockScreener"
+        base.mkdir(parents=True, exist_ok=True)
+        db_path = base / "stock_history.sqlite3"
+        # 首次运行时，把应用包内预置的数据库复制到用户目录
+        if not db_path.exists():
+            bundled_db = DATA_DIR / "stock_history.sqlite3"
+            if bundled_db.exists():
+                import shutil
+                shutil.copy2(str(bundled_db), str(db_path))
+        return db_path
+    # 开发模式下用项目目录
+    return DATA_DIR / "stock_history.sqlite3"
+
+
+DB_PATH = _get_db_path()
 CHINA_TZ = dt.timezone(dt.timedelta(hours=8))
 HISTORY_DAYS = 20
 MIN_HISTORY_DAYS = 13

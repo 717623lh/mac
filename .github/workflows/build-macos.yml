@@ -31,8 +31,13 @@ jobs:
             --hidden-import tkinter \
             stock_screener.py
 
+      - name: 创建 .app 外层文件夹
+        run: |
+          mkdir -p dist/app
+          mv dist/AStockScreener.app dist/app/
+
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: AStockScreener-macOS
-          path: dist/AStockScreener.app
+          path: dist/app/

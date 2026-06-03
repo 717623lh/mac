@@ -615,11 +615,13 @@ class HistoryCache:
         return str(row[0]) if row else None
 
 
-def quote_passes_filter(price: float, closes: Sequence[float]) -> bool:
+def quote_passes_filter(
+    price: float, closes: Sequence[float], prev_close: Optional[float] = None
+) -> bool:
     if len(closes) < MIN_HISTORY_DAYS:
         return False
 
-    previous_close = closes[-1]
+    previous_close = prev_close if prev_close is not None else closes[-1]
     a = mean(list(closes[-4:]) + [price])
     b = mean(list(closes[-7:]) + [price])
     c = mean(list(closes[-12:]) + [price])
@@ -627,7 +629,17 @@ def quote_passes_filter(price: float, closes: Sequence[float]) -> bool:
     e = mean(closes[-8:])
     f = mean(closes[-13:])
 
-    return a >= d and b >= e and c >= f and price > previous_close
+    return (
+        a >= d
+        and b >= e
+        and c >= f
+        and price >= a
+        and price >= b
+        and price >= c
+        and a >= previous_close
+        and b >= previous_close
+        and c >= previous_close
+    )
 
 
 def screen_quotes(
@@ -645,7 +657,7 @@ def screen_quotes(
             missing_history += 1
             continue
         usable_quotes += 1
-        if quote_passes_filter(quote.price, closes):
+        if quote_passes_filter(quote.price, closes, quote.prev_close):
             results.append(
                 ScreeningResult(
                     code=quote.code,
